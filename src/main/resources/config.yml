@@ -1,0 +1,13 @@
+database:
+  type: SQLITE #Options: MYSQL or SQLITE. Use MYSQL for networks and use SQLITE for single servers (If you are a single server and are able to, we do recommend using MYSQL in case you ever turn into a network, also it helps avoid corruption in the event of a crash)
+  file:
+    file-name: "evalite-data.db"
+  mysql:
+    ip: "localhost"
+    port: 3306
+    username: "admin"
+    password: "admin"
+    database: "evalite"
+
+punishments:
+  see-silent-punishments: "evalite.staff.silent" #Permission to see silent punishments

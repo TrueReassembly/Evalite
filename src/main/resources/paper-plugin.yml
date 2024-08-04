@@ -1,0 +1,6 @@
+name: Evalite
+version: '${version}'
+main: dev.reassembly.evalite.Evalite
+api-version: '1.21'
+authors: [Reassembly]
+description: The Free and Open-Source core for your paper network

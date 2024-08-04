@@ -1,0 +1,38 @@
+# IMPORTANT
+# We use MiniMessage for everything in this plugin. You can find the documentation here: https://docs.adventure.kyori.net/minimessage.html
+
+prefix: "<dark_purple>[Evalite] <white>"
+command-no-permission: "<red>You do not have permission to use this command."
+
+social-links:
+    discord: "<dark_purple>discord.gg/ServerName"
+    website: "<dark_purple>servername.com"
+    store: "<dark_purple>store.servername.com"
+    twitter: "<dark_purple>twitter.com/ServerName"
+    server-name: "<dark_purple>Server Name"
+
+join:
+  # The message that sends to people when they join the server. Our inbuilt placeholders are:
+  # %player% - The player's name
+  # %discord% - The discord link as set above
+  # %website% - The website link as set above
+  # %store% - The store link as set above
+  # %twitter% - The twitter link as set above
+  # %server-name% - The server name as set above
+  # Set it to an empty list to disable the join message.
+  join-message:
+    - "<white>Welcome to <dark_purple>%server-name%<white>, %player%!"
+    - "<white>You can join our discord at <dark_purple>%discord%<white>!"
+
+punishments:
+  # The message that sends to the global chat when they are banned. Our inbuilt placeholders are:
+  # %player% - The player's name
+  # %player-rank-color% - The player's rank colour
+  # %punisher% - The punisher's name
+  # %punisher-rank-colour% - The punisher's rank colour
+  # %reason% - The reason for the punishment
+  # %duration% - The spelt-out duration of the punishment. If no duration is set, this will be "Permanent"
+  ban-message: "<dark_purple>%player% <white>was banned by <dark_purple>%punisher%" # The message that sends if it's a public ban
+  silent-ban-message: "<light_gray>[SILENT] <dark_purple>%player% <white>was banned by <dark_purple>%punisher%" # The message that sends if it's a silent ban
+  ban-message-tooltip: "<white>Reason: <dark_purple>%reason%<newline><white>Duration: <dark_purple>%duration%" # This will be the same between both silent and public punishments
+
