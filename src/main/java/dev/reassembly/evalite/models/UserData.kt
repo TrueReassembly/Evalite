@@ -6,13 +6,18 @@ import gg.ingot.iron.annotations.Model
 @Model
 data class UserData(
 
-    val uuid: String,
+    val id: String,
+    @Column("current_username")
     var currentUsername: String,
+    @Column("join_date")
     val joinDate: Long,
+    @Column("last_join")
     val lastJoin: Long,
+    @Column("active_grant")
     val activeGrant: String?,
+    @Column("current_ip")
     var currentIP: String,
-    @Column(json = true)
+    @Column(json = true, name = "past_usernames")
     val pastUsernames: MutableList<String>
 
 

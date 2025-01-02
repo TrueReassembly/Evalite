@@ -10,7 +10,7 @@ class MySQLUserController: UserController {
             """
                 INSERT INTO users(id, current_username, join_date, last_join, active_grant, current_ip, past_usernames) VALUES (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
-            data.uuid,
+            data.id,
             data.currentUsername,
             data.joinDate,
             data.lastJoin,
@@ -38,7 +38,7 @@ class MySQLUserController: UserController {
                 active_grant = ?,
                 current_ip = ?,
                 past_usernames = ?
-                WHERE uuid = ?
+                WHERE id = ?
             """.trimIndent(),
             currentUsername,
             joinDate,
@@ -54,15 +54,13 @@ class MySQLUserController: UserController {
         evalite.database.sqlConnection.prepare(
             """
                 CREATE TABLE IF NOT EXISTS users (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    uuid TEXT NOT NULL,
+                    id TEXT PRIMARY KEY NOT NULL,
                     current_username TEXT NOT NULL,
                     join_date BIGINT NOT NULL,
                     last_join BIGINT NOT NULL,
                     active_grant INTEGER,
                     current_ip TEXT NOT NULL,
                     past_usernames TEXT NOT NULL,
-                    FOREIGN KEY (uuid) REFERENCES users(id),
                     FOREIGN KEY (active_grant) REFERENCES grants(id)
                 )
             """.trimIndent()
@@ -70,10 +68,6 @@ class MySQLUserController: UserController {
     }
 
     override suspend fun getUser(uuid: String): UserData? {
-        return try {
-            evalite.database.sqlConnection.prepare("SELECT * FROM users WHERE uuid = ? LIMIT 1;", uuid).single<UserData>()
-        } catch (e: IllegalStateException) {
-            null
-        }
+        return evalite.database.sqlConnection.prepare("SELECT * FROM users WHERE id = ? LIMIT 1;", uuid).singleNullable<UserData>()
     }
 }

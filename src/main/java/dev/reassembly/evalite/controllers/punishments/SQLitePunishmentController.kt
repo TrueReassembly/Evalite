@@ -11,7 +11,7 @@ class SQLitePunishmentController : PunishmentController {
     ) {
         evalite.database.sqlConnection.prepare(
             """
-                INSERT INTO punishments(target_uuid, mod_uuid, type, reason, ladder, level, issued_at, last_modified_at, last_modified_by_uuid, expires_at, unpunished_by_uuid, unpunished_reason, unpunished_at, chat_snapshot) VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO punishments(target_uuid, mod_uuid, type, reason, ladder, level, issued_at, last_modified_at, last_modified_by_uuid, expires_at, unpunished_by_uuid, unpunished_reason, unpunished_at, chat_snapshot_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
             punishmentData.targetUUID,
             punishmentData.modUUID,
@@ -26,7 +26,7 @@ class SQLitePunishmentController : PunishmentController {
             punishmentData.unpunishedByUUID,
             punishmentData.unpunishedReason,
             punishmentData.unpunishedAt,
-            jsonField(punishmentData.chatSnapshot)
+            punishmentData.chatSnapshotId
         )
     }
 
@@ -54,7 +54,7 @@ class SQLitePunishmentController : PunishmentController {
         unpunishedByUUID: String,
         unpunishedReason: String,
         unpunishedAt: Long,
-        chatSnapshot: String
+        chatSnapshot: Int
     ) {
         evalite.database.sqlConnection.prepare(
             """
@@ -72,7 +72,7 @@ class SQLitePunishmentController : PunishmentController {
             unpunished_by_uuid = ?,
             unpunished_reason = ?,
             unpunished_at = ?,
-            chat_snapshot = ?
+            chat_snapshot_id = ?
             WHERE id = ?
         """.trimIndent(),
             targetUUID,
@@ -111,12 +111,151 @@ class SQLitePunishmentController : PunishmentController {
             unpunished_by_uuid TEXT,
             unpunished_reason TEXT,
             unpunished_at INTEGER,
-            chat_snapshot TEXT,
+            chat_snapshot_id INTEGER,
             
             FOREIGN KEY (target_uuid) REFERENCES users(id),
-            FOREIGN KEY (mod_uuid) REFERENCES users(id)
+            FOREIGN KEY (mod_uuid) REFERENCES users(id),
+            FOREIGN KEY (last_modified_by_uuid) REFERENCES users(id),
+            FOREIGN KEY (unpunished_by_uuid) REFERENCES users(id),
+            FOREIGN KEY (chat_snapshot_id) REFERENCES chat_snapshots(id)
         );
         """.trimIndent()
         )
+    }
+
+    override suspend fun getPunishments(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=?
+            """.trimIndent()
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getPunishments(targetUUID: String, type: PunishmentType): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type=?
+            """.trimIndent(),
+            targetUUID,
+            type.name
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getActivePunishments(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND ( expires_at > ? OR expires_at IS NULL) 
+            """.trimIndent(),
+            targetUUID,
+            System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getWarns(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='WARN'
+            """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getKicks(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='KICK'
+            """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getMutes(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='MUTE' AND type='TEMP_MUTE'
+            """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getBans(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='BAN' AND type='TEMP_BAN'
+            """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun getBlacklists(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='BLACKLIST'
+            """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all<PunishmentData>()
+    }
+
+    override suspend fun isBanned(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='BAN' OR (type='TEMP_BAN' AND (expires_at > ?  OR expires_at IS NULL))
+            """.trimIndent(),
+            targetUUID,
+            System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun isMuted(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='MUTE' AND (expires_at > ?  OR expires_at IS NULL)
+            """.trimIndent(),
+            targetUUID,
+            System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun isBlacklisted(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='BLACKLIST'
+            """.trimIndent(),
+            targetUUID,
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun getActiveBan(targetUUID: String): PunishmentData? {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+                SELECT * FROM punishments WHERE target_uuid=? AND type='BAN' OR (type='TEMP_BAN' AND (expires_at > ?  OR expires_at IS NULL)) LIMIT 1
+            """.trimIndent(),
+            targetUUID,
+            System.currentTimeMillis()
+        )
+
+        return result.singleNullable<PunishmentData>()
     }
 }
