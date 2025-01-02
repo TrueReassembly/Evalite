@@ -1,7 +1,7 @@
 # IMPORTANT
 # We use MiniMessage for everything in this plugin. You can find the documentation here: https://docs.adventure.kyori.net/minimessage.html
 
-prefix: "<dark_purple>[Evalite] <white>"
+prefix: "<dark_purple>[Evalite]"
 command-no-permission: "<red>You do not have permission to use this command."
 
 social-links:
@@ -11,28 +11,45 @@ social-links:
     twitter: "<dark_purple>twitter.com/ServerName"
     server-name: "<dark_purple>Server Name"
 
+# The following placeholders are available everywhere
+
+# <discord> - The discord link as set above
+# <website> - The website link as set above
+# <store> - The store link as set above
+# <twitter> - The twitter link as set above
+# <server-name> - The server name as set above
+# <prefix> - The prefix of the server as set at the top of this file
+
 join:
   # The message that sends to people when they join the server. Our inbuilt placeholders are:
-  # %player% - The player's name
-  # %discord% - The discord link as set above
-  # %website% - The website link as set above
-  # %store% - The store link as set above
-  # %twitter% - The twitter link as set above
-  # %server-name% - The server name as set above
+  # <player>- The player's name
   # Set it to an empty list to disable the join message.
   join-message:
-    - "<white>Welcome to <dark_purple>%server-name%<white>, %player%!"
-    - "<white>You can join our discord at <dark_purple>%discord%<white>!"
+    - "<white>Welcome to <server-name><white>, <player>!"
+    - "<white>You can join our discord at <discord><white>!"
 
 punishments:
-  # The message that sends to the global chat when they are banned. Our inbuilt placeholders are:
-  # %player% - The player's name
-  # %player-rank-color% - The player's rank colour
-  # %punisher% - The punisher's name
-  # %punisher-rank-colour% - The punisher's rank colour
-  # %reason% - The reason for the punishment
-  # %duration% - The spelt-out duration of the punishment. If no duration is set, this will be "Permanent"
-  ban-message: "<dark_purple>%player% <white>was banned by <dark_purple>%punisher%" # The message that sends if it's a public ban
-  silent-ban-message: "<light_gray>[SILENT] <dark_purple>%player% <white>was banned by <dark_purple>%punisher%" # The message that sends if it's a silent ban
-  ban-message-tooltip: "<white>Reason: <dark_purple>%reason%<newline><white>Duration: <dark_purple>%duration%" # This will be the same between both silent and public punishments
+
+  # <player> - The player's name
+  # <player-rank-color> - The player's rank colour
+  # <punisher> - The punisher's name, will be defaulted to "a staff member" if this returns null
+  # <punisher-rank-colour> - The punisher's rank colour
+  # <reason> - The reason for the punishment
+  # <duration> - The spelt-out duration of the punishment. If no duration is set, this will be "Permanent" (Will not apply to kicks)
+  # <sub-server-name> - The sub-server the user was banned from (Do not use this at the moment, network support has not been implemented yet)
+  # <type> - The type of punishment in an enum format (BAN, MUTE, KICK, WARN etc)
+  # <type-suffixed> - The type of punishment but in a way that makes it better for a sentence (banned, warned, muted etc)
+  # <punishment-expiration-date> - The date the punishment will expire
+  # <punishment-expiration-datetime> - The date and time the punishment will expire
+
+
+  # The message that sends to the global chat when they are punished.
+
+  punishment-message: "<dark_purple><player> <white>was <type-suffixed>by <dark_purple><punisher>" # The message that sends if it's a public ban
+  silent-punishment-message: "<light_gray>[SILENT] <dark_purple><player><white>was <type-suffixed>by <dark_purple><punisher>" # The message that sends if it's a silent ban
+  ban-message-tooltip: "<white>Reason: <dark_purple><reason><newline><white>Duration: <dark_purple><duration>" # This will be the same between both silent and public punishments
+
+  # The message that sends to the player when they join if they are banned.
+  # <time-remaining>- The time remaining on the ban
+  banned-join-message: "<prefix> <red>You are banned from this server.<newline><newline>Reason: <dark_purple><reason><newline><red>Your punishment will expire in <dark_purple><time-remaining><newline><newline><white>If you believe this is a mistake, please appeal on our discord at <dark_purple><discord>"
 

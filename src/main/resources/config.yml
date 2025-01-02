@@ -10,4 +10,7 @@ database:
     database: "evalite"
 
 punishments:
-  see-silent-punishments: "evalite.staff.silent" #Permission to see silent punishments
+  # If this is true, no punishments will be broadcasted to normal players
+  force-silent: false
+  #Permission to see silent punishments
+  see-silent-punishments-permission: "evalite.staff.silent"

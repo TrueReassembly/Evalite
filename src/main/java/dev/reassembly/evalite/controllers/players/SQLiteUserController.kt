@@ -9,9 +9,9 @@ class SQLiteUserController : UserController {
     ) {
         evalite.database.sqlConnection.prepare(
             """
-                INSERT INTO users(uuid, current_username, join_date, last_join, active_grant, current_ip, past_usernames) VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users(id, current_username, join_date, last_join, active_grant, current_ip, past_usernames) VALUES (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
-            data.uuid,
+            data.id,
             data.currentUsername,
             data.joinDate,
             data.lastJoin,
@@ -39,7 +39,7 @@ class SQLiteUserController : UserController {
                 active_grant = ?,
                 current_ip = ?,
                 past_usernames = ?
-                WHERE uuid = ?
+                WHERE id = ?
             """.trimIndent(),
             currentUsername,
             joinDate,
@@ -61,17 +61,15 @@ class SQLiteUserController : UserController {
                     last_join INTEGER NOT NULL,
                     active_grant TEXT,
                     current_ip TEXT NOT NULL,
-                    past_usernames TEXT NOT NULL
+                    past_usernames TEXT NOT NULL,
+                    
+                    FOREIGN KEY (active_grant) REFERENCES grants(id)
                 )
             """.trimIndent()
         )
     }
 
     override suspend fun getUser(uuid: String): UserData? {
-        return try {
-            evalite.database.sqlConnection.prepare("SELECT * FROM users WHERE uuid = ? LIMIT 1;", uuid).single<UserData>()
-        } catch (e: IllegalStateException) {
-            null
-        }
+        return evalite.database.sqlConnection.prepare("SELECT * FROM users WHERE id = ? LIMIT 1;", uuid).singleNullable<UserData>()
     }
 }

@@ -10,9 +10,14 @@ class MySQLPunishmentController : PunishmentController {
     ) {
         evalite.database.sqlConnection.prepare(
             """
-                INSERT INTO punishments(target_uuid, mod_uuid, type, reason, ladder, level) VALUES (?, ?, ?, ?, ?, ?)
-            """.trimIndent(),
-            punishmentData.targetUUID, punishmentData.modUUID, punishmentData.type, punishmentData.reason, punishmentData.ladder, punishmentData.level
+            INSERT INTO punishments(
+                target_uuid, mod_uuid, type, reason, ladder, level, issued_at, last_modified_at, last_modified_by_uuid,
+                expires_at, unpunished_by_uuid, unpunished_reason, unpunished_at, chat_snapshot_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """.trimIndent(),
+            punishmentData.targetUUID, punishmentData.modUUID, punishmentData.type, punishmentData.reason, punishmentData.ladder, punishmentData.level,
+            punishmentData.issuedAt, punishmentData.lastModifiedAt, punishmentData.lastModifiedByUUID, punishmentData.expiresAt,
+            punishmentData.unpunishedByUUID, punishmentData.unpunishedReason, punishmentData.unpunishedAt, punishmentData.chatSnapshotId
         )
     }
 
@@ -40,7 +45,7 @@ class MySQLPunishmentController : PunishmentController {
         unpunishedByUUID: String,
         unpunishedReason: String,
         unpunishedAt: Long,
-        chatSnapshot: String
+        chatSnapshot: Int
     ) {
         evalite.database.sqlConnection.prepare(
             """
@@ -58,7 +63,7 @@ class MySQLPunishmentController : PunishmentController {
             unpunished_by_uuid = ?,
             unpunished_reason = ?,
             unpunished_at = ?,
-            chat_snapshot_uuid = ?
+            chat_snapshot_id = ?
             WHERE id = ?
         """.trimIndent(),
             targetUUID,
@@ -97,15 +102,112 @@ class MySQLPunishmentController : PunishmentController {
             unpunished_by_uuid INT,
             unpunished_reason TEXT,
             unpunished_at BIGINT,
-            chat_snapshot_uuid INT,
+            chat_snapshot_id INT,
             FOREIGN KEY(target_uuid) REFERENCES users(id),
             FOREIGN KEY(mod_uuid) REFERENCES users(id),
             FOREIGN KEY(last_modified_by_uuid) REFERENCES users(id),
             FOREIGN KEY(unpunished_by_uuid) REFERENCES users(id),
-            FOREIGN KEY(ladder) REFERENCES punishment_ladders(id)
-            FOREIGN KEY
+            FOREIGN KEY(ladder) REFERENCES punishment_ladders(id),
+            FOREIGN KEY(chat_snapshot_id) REFERENCES chat_snapshots(id)
         );
         """.trimIndent()
         )
+    }
+
+    override suspend fun getPunishments(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=?
+        """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all()
+    }
+
+    override suspend fun getPunishments(targetUUID: String, type: PunishmentType): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND type=?
+        """.trimIndent(),
+            targetUUID, type
+        )
+
+        return result.all()
+    }
+
+    override suspend fun getActivePunishments(targetUUID: String): List<PunishmentData> {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND (expires_at > ?  OR expires_at IS NULL)
+        """.trimIndent(),
+            targetUUID
+        )
+
+        return result.all()
+    }
+
+    override suspend fun getWarns(targetUUID: String): List<PunishmentData> {
+        return getPunishments(targetUUID, PunishmentType.WARN)
+    }
+
+    override suspend fun getKicks(targetUUID: String): List<PunishmentData> {
+        return getPunishments(targetUUID, PunishmentType.KICK)
+    }
+
+    override suspend fun getMutes(targetUUID: String): List<PunishmentData> {
+        return getPunishments(targetUUID, PunishmentType.MUTE)
+    }
+
+    override suspend fun getBans(targetUUID: String): List<PunishmentData> {
+        return getPunishments(targetUUID, PunishmentType.BAN)
+    }
+
+    override suspend fun getBlacklists(targetUUID: String): List<PunishmentData> {
+        return getPunishments(targetUUID, PunishmentType.BLACKLIST)
+    }
+
+    override suspend fun isBanned(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND type='BAN' AND (expires_at > ?  OR expires_at IS NULL)
+        """.trimIndent(),
+            targetUUID, System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun isMuted(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND type='MUTE' AND (expires_at > ?  OR expires_at IS NULL)
+        """.trimIndent(),
+            targetUUID, System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun isBlacklisted(targetUUID: String): Boolean {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND type='BLACKLIST' AND expires_at > ?
+        """.trimIndent(),
+            targetUUID, System.currentTimeMillis()
+        )
+
+        return result.all<PunishmentData>().isNotEmpty()
+    }
+
+    override suspend fun getActiveBan(targetUUID: String): PunishmentData? {
+        val result = evalite.database.sqlConnection.prepare(
+            """
+            SELECT * FROM punishments WHERE target_uuid=? AND type='BAN' AND (expires_at > ?  OR expires_at IS NULL) LIMIT 1
+        """.trimIndent(),
+            targetUUID, System.currentTimeMillis()
+        )
+
+        return result.singleNullable()
     }
 }

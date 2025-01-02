@@ -8,6 +8,7 @@ import dev.reassembly.evalite.controllers.punishments.MySQLPunishmentController
 import dev.reassembly.evalite.controllers.punishments.PunishmentController
 import dev.reassembly.evalite.controllers.punishments.SQLitePunishmentController
 import dev.reassembly.evalite.evalite
+import dev.reassembly.evalite.handlers.PlayerHandler
 import gg.ingot.iron.Iron
 import gg.ingot.iron.IronSettings
 import gg.ingot.iron.representation.DBMS
@@ -70,7 +71,8 @@ class DatabaseHandler {
 
         userController.createTable()
         punishmentController.createTable()
-
+        evalite.punishmentHandler = punishmentController
+        evalite.playerHandler = PlayerHandler()
     }
 
     fun getAutoIncrementKeyword(): String {
